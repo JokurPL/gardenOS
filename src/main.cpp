@@ -3,10 +3,49 @@
 
 // CONSTANTS
 #define LED 10
+#define firstAnalogPin 54
+
+int moistureSensorsAmonut = 1;
+float averageMoisture;
 
 char incoming_value;
 
 SoftwareSerial hc06(2, 3); // 2 - Rx, 3 - Tx | Arduino Rx -> HC Tx # Arduino Tx -> Hc Rx by divider 
+
+// ################################ FUNCTIONS ################################
+
+void initAnalogs(int moistureSensorsAmonut)
+{
+  if (moistureSensorsAmonut > 0)
+  {
+    int endIteration = firstAnalogPin + moistureSensorsAmonut;
+
+    for (int i = firstAnalogPin; i < endIteration; i++)
+    {
+      pinMode(i, INPUT);
+    }
+  }
+}
+
+float toAverage(int moistureSensorsAmonut)
+{
+  float avg = 0;
+
+  if (moistureSensorsAmonut > 0)
+  {
+    float sum;
+
+    int endIteration = firstAnalogPin + moistureSensorsAmonut;
+
+    for (int i = firstAnalogPin; i < endIteration; i++)
+    {
+      sum += analogRead(uint8_t(i));
+    }
+
+    avg = sum / moistureSensorsAmonut;
+  }
+  return avg;
+}
 
 void setup() {
   Serial.begin(9600);
@@ -14,6 +53,8 @@ void setup() {
   
   Serial.println("ENTER AT Commands:"); 
   
+  initAnalogs(moistureSensorsAmonut);
+
   pinMode(LED, OUTPUT); // simple LED
 }
 
@@ -55,4 +96,3 @@ void loop() {
     hc06.write(incoming_value);
   }
 }
-
