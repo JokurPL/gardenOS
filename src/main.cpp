@@ -27,6 +27,13 @@ byte year, month, date, DoW, hour, minute, second;
 #define ALARM_MONTH_EEPROM 4
 #define ALARM_YEAR_EEPROM 5
 
+#define STOP_ALARM_SECOND_EEPROM 6
+#define STOP_ALARM_MINUTE_EEPROM 7
+#define STOP_ALARM_HOUR_EEPROM 8
+#define STOP_ALARM_DAY_EEPROM 9
+#define STOP_ALARM_MONTH_EEPROM 10
+#define STOP_ALARM_YEAR_EEPROM 11
+
 int moistureSensorsAmonut = 0;
 float averageMoisture;
 
@@ -35,14 +42,14 @@ char outcomingValue;
 
 String dataFromPhone;
 
-SoftwareSerial hc06(2, 3); // 2 - Rx, 3 - Tx | Arduino Rx -> HC Tx # Arduino Tx -> Hc Rx by divider
+SoftwareSerial hc06(2, 3); // 2 - Rx, 3 - Tx | Arduino Rx -> HC Tx # Arduino Tx -> HC Rx by divider
 
 // ################################ FUNCTIONS ################################
 
 bool isFirstAlarm()
 {
   int secondEEPROM, minuteEEPROM, hourEEPROM, dayEEPROM, monthEEPROM, yearEEPROM, second, minute, hour, day, month, year;
-  
+
   second = Clock.getSecond();
   minute = Clock.getMinute();
   hour = Clock.getHour(h12, PM);
@@ -57,7 +64,36 @@ bool isFirstAlarm()
   monthEEPROM = EEPROM.read(ALARM_MONTH_EEPROM);
   yearEEPROM = EEPROM.read(ALARM_YEAR_EEPROM);
 
-  if (second == secondEEPROM && minute == minuteEEPROM && hour == hourEEPROM && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM)
+  //second == secondEEPROM && 
+
+  if (minute == minuteEEPROM && hour == hourEEPROM && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM)
+  {
+    return true;
+  }
+  return false;
+}
+
+bool isStopFirstAlarm()
+{
+  int secondEEPROM, minuteEEPROM, hourEEPROM, dayEEPROM, monthEEPROM, yearEEPROM, second, minute, hour, day, month, year;
+
+  second = Clock.getSecond();
+  minute = Clock.getMinute();
+  hour = Clock.getHour(h12, PM);
+  day = Clock.getDate();
+  month = Clock.getMonth(Century);
+  year = Clock.getYear();
+
+  secondEEPROM = EEPROM.read(STOP_ALARM_SECOND_EEPROM);
+  minuteEEPROM = EEPROM.read(STOP_ALARM_MINUTE_EEPROM);
+  hourEEPROM = EEPROM.read(STOP_ALARM_HOUR_EEPROM);
+  dayEEPROM = EEPROM.read(STOP_ALARM_DAY_EEPROM);
+  monthEEPROM = EEPROM.read(STOP_ALARM_MONTH_EEPROM);
+  yearEEPROM = EEPROM.read(STOP_ALARM_YEAR_EEPROM);
+
+  //second == secondEEPROM && 
+
+  if (minute == minuteEEPROM && hour == hourEEPROM && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM)
   {
     return true;
   }
@@ -212,8 +248,6 @@ void setup()
   Serial.begin(9600);
   hc06.begin(9600);
 
-  digitalWrite(LED, 0);
-
   initAnalogs(moistureSensorsAmonut);
   pinMode(LED, OUTPUT); // simple LED
 }
@@ -245,7 +279,7 @@ void loop()
       setTime(timeData[1], timeData[2], timeData[3], timeData[4], timeData[5], timeData[6], timeData[7]);
       readTime();
     }
-    else if (dataFromPhone[0] == 'A' && dataFromPhone[1] == 'T' && dataFromPhone[2] == 'I')
+    else if (dataFromPhone[0] == 'A' && dataFromPhone[1] == 'T' && dataFromPhone[2] == 'S')
     {
       int *timeFromBT;
       timeFromBT = readTimeFromBT(dataFromPhone);
@@ -268,15 +302,40 @@ void loop()
       delay(3.3);
       EEPROM.write(ALARM_YEAR_EEPROM, timeData[7]);
 
-      int s = EEPROM.read(ALARM_SECOND_EEPROM);
-      int m = EEPROM.read(ALARM_MINUTE_EEPROM);
-      int h = EEPROM.read(ALARM_HOUR_EEPROM);
-      int d = EEPROM.read(ALARM_DAY_EEPROM);
-      int mo = EEPROM.read(ALARM_MONTH_EEPROM);
-      int y = EEPROM.read(ALARM_YEAR_EEPROM);
+      //readTime();
+    }
+    else if (dataFromPhone[0] == 'A' && dataFromPhone[1] == 'T' && dataFromPhone[2] == 'F')
+    {
+      int *timeFromBT;
+      timeFromBT = readTimeFromBT(dataFromPhone);
 
-      // setTime(s, m, h, 0, d, mo, y);
-      readTime();
+      int timeData[7];
+      for (int i = 1; i < 8; i++)
+      {
+        timeData[i] = *(timeFromBT + i);
+      }
+
+      EEPROM.write(STOP_ALARM_SECOND_EEPROM, timeData[1]);
+      delay(3.3);
+      EEPROM.write(STOP_ALARM_MINUTE_EEPROM, timeData[2]);
+      delay(3.3);
+      EEPROM.write(STOP_ALARM_HOUR_EEPROM, timeData[3]);
+      delay(3.3);
+      EEPROM.write(STOP_ALARM_DAY_EEPROM, timeData[5]);
+      delay(3.3);
+      EEPROM.write(STOP_ALARM_MONTH_EEPROM, timeData[6]);
+      delay(3.3);
+      EEPROM.write(STOP_ALARM_YEAR_EEPROM, timeData[7]);
+
+      // int secondEEPROM = EEPROM.read(STOP_ALARM_SECOND_EEPROM);
+      // int minuteEEPROM = EEPROM.read(STOP_ALARM_MINUTE_EEPROM);
+      // int hourEEPROM = EEPROM.read(STOP_ALARM_HOUR_EEPROM);
+      // int dayEEPROM = EEPROM.read(STOP_ALARM_DAY_EEPROM);
+      // int monthEEPROM = EEPROM.read(STOP_ALARM_MONTH_EEPROM);
+      // int yearEEPROM = EEPROM.read(STOP_ALARM_YEAR_EEPROM);
+
+      // setTime(secondEEPROM, minuteEEPROM, hourEEPROM, 0, dayEEPROM, monthEEPROM, yearEEPROM);
+      // readTime();
     }
     else if (dataFromPhone[0] == 'p')
     {
@@ -300,11 +359,10 @@ void loop()
 
   if (isFirstAlarm())
   {
-    digitalWrite(LED, HIGH);  
+    digitalWrite(LED, HIGH);
   }
   if (isStopFirstAlarm())
   {
     digitalWrite(LED, LOW);
   }
-  
 }
