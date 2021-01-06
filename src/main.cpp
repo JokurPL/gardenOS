@@ -3,6 +3,7 @@
 #include <DS3231.h>
 #include <Wire.h>
 #include <string.h>
+#include <EEPROM.h> // ???
 
 // Time variables
 DS3231 Clock;
@@ -19,6 +20,13 @@ byte year, month, date, DoW, hour, minute, second;
 #define LED 10
 #define firstAnalogPin 54
 
+#define ALARM_SECOND_EEPROM 0
+#define ALARM_MINUTE_EEPROM 1
+#define ALARM_HOUR_EEPROM 2
+#define ALARM_DAY_EEPROM 3
+#define ALARM_MONTH_EEPROM 4
+#define ALARM_YEAR_EEPROM 5
+
 int moistureSensorsAmonut = 0;
 float averageMoisture;
 
@@ -30,6 +38,31 @@ String dataFromPhone;
 SoftwareSerial hc06(2, 3); // 2 - Rx, 3 - Tx | Arduino Rx -> HC Tx # Arduino Tx -> Hc Rx by divider
 
 // ################################ FUNCTIONS ################################
+
+bool isFirstAlarm()
+{
+  int secondEEPROM, minuteEEPROM, hourEEPROM, dayEEPROM, monthEEPROM, yearEEPROM, second, minute, hour, day, month, year;
+  
+  second = Clock.getSecond();
+  minute = Clock.getMinute();
+  hour = Clock.getHour(h12, PM);
+  day = Clock.getDate();
+  month = Clock.getMonth(Century);
+  year = Clock.getYear();
+
+  secondEEPROM = EEPROM.read(ALARM_SECOND_EEPROM);
+  minuteEEPROM = EEPROM.read(ALARM_MINUTE_EEPROM);
+  hourEEPROM = EEPROM.read(ALARM_HOUR_EEPROM);
+  dayEEPROM = EEPROM.read(ALARM_DAY_EEPROM);
+  monthEEPROM = EEPROM.read(ALARM_MONTH_EEPROM);
+  yearEEPROM = EEPROM.read(ALARM_YEAR_EEPROM);
+
+  if (second == secondEEPROM && minute == minuteEEPROM && hour == hourEEPROM && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM)
+  {
+    return true;
+  }
+  return false;
+}
 
 void readTime()
 {
@@ -147,11 +180,39 @@ void setTime(int second, int minute, int hour, int dayOfWeek, int day, int month
   Clock.setYear(year);
 }
 
+int *readTimeFromBT(String dataFromPhone)
+{
+  static int timeData[7];
+
+  char data[dataFromPhone.length()];
+  for (size_t i = 0; i < sizeof(data); i++)
+  {
+    data[i] = dataFromPhone[i];
+  }
+
+  int iterator = 0;
+  char *token = strtok(data, ",");
+
+  while (token != NULL)
+  {
+    if (iterator > 0)
+    {
+      timeData[iterator] = atoi(token);
+    }
+    token = strtok(NULL, ",");
+    iterator++;
+  }
+
+  return timeData;
+}
+
 void setup()
 {
   Wire.begin();
   Serial.begin(9600);
   hc06.begin(9600);
+
+  digitalWrite(LED, 0);
 
   initAnalogs(moistureSensorsAmonut);
   pinMode(LED, OUTPUT); // simple LED
@@ -165,34 +226,56 @@ void loop()
   {
     // incomingValue = hc06.read();
     // Serial.write(incomingValue);
-
     dataFromPhone = hc06.readString();
     Serial.print(dataFromPhone);
     if (dataFromPhone[0] == 'R' && dataFromPhone[1] == 'T' && dataFromPhone[2] == 'C')
     {
       hc06.print(dataFromPhone);
 
-      char data[dataFromPhone.length()];
-      for (size_t i = 0; i < sizeof(data); i++)
-      {
-        data[i] = dataFromPhone[i];
-      }
+      int *timeFromBT;
+      timeFromBT = readTimeFromBT(dataFromPhone);
 
       int timeData[7];
-      int iterator = 0;
-      char *token = strtok(data, ",");
-      // loop through the string to extract all other tokens
-      while (token != NULL)
+
+      for (int i = 1; i < 8; i++)
       {
-        if (iterator > 0)
-        {
-          timeData[iterator] = atoi(token);
-        }
-        token = strtok(NULL, ",");
-        iterator++;
+        timeData[i] = *(timeFromBT + i);
       }
 
       setTime(timeData[1], timeData[2], timeData[3], timeData[4], timeData[5], timeData[6], timeData[7]);
+      readTime();
+    }
+    else if (dataFromPhone[0] == 'A' && dataFromPhone[1] == 'T' && dataFromPhone[2] == 'I')
+    {
+      int *timeFromBT;
+      timeFromBT = readTimeFromBT(dataFromPhone);
+
+      int timeData[7];
+      for (int i = 1; i < 8; i++)
+      {
+        timeData[i] = *(timeFromBT + i);
+      }
+
+      EEPROM.write(ALARM_SECOND_EEPROM, timeData[1]);
+      delay(3.3);
+      EEPROM.write(ALARM_MINUTE_EEPROM, timeData[2]);
+      delay(3.3);
+      EEPROM.write(ALARM_HOUR_EEPROM, timeData[3]);
+      delay(3.3);
+      EEPROM.write(ALARM_DAY_EEPROM, timeData[5]);
+      delay(3.3);
+      EEPROM.write(ALARM_MONTH_EEPROM, timeData[6]);
+      delay(3.3);
+      EEPROM.write(ALARM_YEAR_EEPROM, timeData[7]);
+
+      int s = EEPROM.read(ALARM_SECOND_EEPROM);
+      int m = EEPROM.read(ALARM_MINUTE_EEPROM);
+      int h = EEPROM.read(ALARM_HOUR_EEPROM);
+      int d = EEPROM.read(ALARM_DAY_EEPROM);
+      int mo = EEPROM.read(ALARM_MONTH_EEPROM);
+      int y = EEPROM.read(ALARM_YEAR_EEPROM);
+
+      // setTime(s, m, h, 0, d, mo, y);
       readTime();
     }
     else if (dataFromPhone[0] == 'p')
@@ -204,6 +287,7 @@ void loop()
       else
       {
         digitalWrite(LED, HIGH);
+        readTime();
       }
     }
   }
@@ -213,4 +297,14 @@ void loop()
   {
     hc06.write(Serial.read());
   }
+
+  if (isFirstAlarm())
+  {
+    digitalWrite(LED, HIGH);  
+  }
+  if (isStopFirstAlarm())
+  {
+    digitalWrite(LED, LOW);
+  }
+  
 }
