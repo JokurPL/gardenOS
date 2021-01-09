@@ -54,6 +54,9 @@ byte year, month, date, DoW, hour, minute, second;
 #define CYCLIC_STOP_HOUR_EEPROM 23
 #define CYCLIC_STOP_MINUTE_EEPROM 24
 
+// ####### MANUAL IRRIGATION CONSTANTS #######
+#define MANUAL_IRRIGATION_EEPROM 25
+
 int moistureSensorsAmonut = 0;
 float averageMoisture;
 
@@ -65,6 +68,16 @@ String dataFromPhone;
 SoftwareSerial hc06(2, 3); // 2 - Rx, 3 - Tx | Arduino Rx -> HC Tx # Arduino Tx -> HC Rx by divider
 
 // ################################ FUNCTIONS ################################
+bool isManualIrrigation()
+{
+  int mode = EEPROM.read(MANUAL_IRRIGATION_EEPROM);
+
+  if (mode == 1)
+  {
+    return true;
+  }
+  return false;
+}
 
 bool startCyclicIrrigation()
 {
@@ -230,10 +243,15 @@ int mode()
   {
     return 2;
   }
-  else if (irrigationMode == 3) 
+  else if (irrigationMode == 3)
   {
     return 3;
   }
+  else if (irrigationMode == 4)
+  {
+    return 4;
+  }
+
   return 1;
 }
 
@@ -405,6 +423,16 @@ int *readDataFromBT(String dataFromPhone)
   return dataArray;
 }
 
+void startIrrigation()
+{
+  digitalWrite(LED, HIGH);
+}
+
+void stopIrrigation() 
+{
+  digitalWrite(LED, LOW);
+}
+
 void setup()
 {
   Wire.begin();
@@ -524,6 +552,19 @@ void loop()
       delay(3.3);
       EEPROM.write(CYCLIC_STOP_MINUTE_EEPROM, timeData[11]);
     }
+    else if (dataFromPhone[0] == 'M' && dataFromPhone[1] == 'A' && dataFromPhone[2] == 'N')
+    {
+      int *dataFromBT;
+      dataFromBT = readDataFromBT(dataFromPhone);
+
+      int data[2];
+      for (int i = 1; i < 3; i++)
+      {
+        data[i] = *(dataFromBT + i);
+      }
+
+      EEPROM.write(MANUAL_IRRIGATION_EEPROM, data[1]);
+    }
     else if (dataFromPhone[0] == 'p')
     {
       if (digitalRead(LED) == HIGH)
@@ -545,28 +586,30 @@ void loop()
 
   if (isFirstAlarm() && mode() == 2)
   {
-    // TO DO: irrigate()
-    digitalWrite(LED, HIGH);
+    startIrrigation();
   }
   if (isStopFirstAlarm() && mode() == 2)
   {
-    // TO DO: stopIrrigate()
-    digitalWrite(LED, LOW);
+    stopIrrigation();
   }
 
   if (startCyclicIrrigation() && mode() == 3)
   {
-    digitalWrite(LED, HIGH);
-  }
-  
-  if(stopCyclicIrrigation() && mode() == 3) {
-    digitalWrite(LED, LOW);
+    startIrrigation();
   }
 
+  if (stopCyclicIrrigation() && mode() == 3)
+  {
+    stopIrrigation();
+  }
 
-  // if (!mode())
-  // {
-  //   // TO DO: stopIrrigate()
-  //   digitalWrite(LED, LOW);
-  // }
+  if (isManualIrrigation() && mode() == 4)
+  {
+    startIrrigation();
+  }
+
+  if (!isManualIrrigation() && mode() == 4)
+  {
+    stopIrrigation();
+  }
 }
