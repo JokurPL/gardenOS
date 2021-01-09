@@ -20,7 +20,7 @@ byte year, month, date, DoW, hour, minute, second;
 #define LED 10
 #define firstAnalogPin 54
 
-// ####### ALARM CONSTANTS #######
+// ####### ALARM(PLANNED IRRIGATION) CONSTANTS #######
 
 #define ALARM_SECOND_EEPROM 0
 #define ALARM_MINUTE_EEPROM 1
@@ -41,6 +41,19 @@ byte year, month, date, DoW, hour, minute, second;
 #define SENSORS_AMOUNT_EEPROM 12
 #define IRRIGATIOM_MODE_EEPROM 13
 
+// ####### CYCLIC IRRIGATION CONSTANTS #######
+#define CYCLIC_MONDAY_EEPROM 14
+#define CYCLIC_TUESDEY_EEPROM 15
+#define CYCLIC_WEDNESDAY_EEPROM 16
+#define CYCLIC_THURSDAY_EEPROM 17
+#define CYCLIC_FRIDAY_EEPROM 18
+#define CYCLIC_SATURDAY_EEPROM 19
+#define CYCLIC_SUNDAY_EEPROM 20
+#define CYCLIC_START_HOUR_EEPROM 21
+#define CYCLIC_START_MINUTE_EEPROM 22
+#define CYCLIC_STOP_HOUR_EEPROM 23
+#define CYCLIC_STOP_MINUTE_EEPROM 24
+
 int moistureSensorsAmonut = 0;
 float averageMoisture;
 
@@ -53,14 +66,175 @@ SoftwareSerial hc06(2, 3); // 2 - Rx, 3 - Tx | Arduino Rx -> HC Tx # Arduino Tx 
 
 // ################################ FUNCTIONS ################################
 
-bool isAutomode() {
+bool startCyclicIrrigation()
+{
+  // int second = Clock.getSecond();
+  int minute = Clock.getMinute();
+  int hour = Clock.getHour(h12, PM);
+  int day = Clock.getDoW();
+
+  int monday = EEPROM.read(CYCLIC_MONDAY_EEPROM);
+  int tuesdey = EEPROM.read(CYCLIC_TUESDEY_EEPROM);
+  int wednesday = EEPROM.read(CYCLIC_WEDNESDAY_EEPROM);
+  int thursday = EEPROM.read(CYCLIC_THURSDAY_EEPROM);
+  int friday = EEPROM.read(CYCLIC_FRIDAY_EEPROM);
+  int saturday = EEPROM.read(CYCLIC_SATURDAY_EEPROM);
+  int sunday = EEPROM.read(CYCLIC_SUNDAY_EEPROM);
+
+  int startHour = EEPROM.read(CYCLIC_START_HOUR_EEPROM);
+  int startMinute = EEPROM.read(CYCLIC_START_MINUTE_EEPROM);
+
+  switch (day)
+  {
+  case 1:
+    if (monday == 1 && hour == startHour && minute == startMinute)
+    {
+      return true;
+    }
+    break;
+
+  case 2:
+    if (tuesdey == 1 && hour == startHour && minute == startMinute)
+    {
+      return true;
+    }
+    break;
+
+  case 3:
+    if (wednesday == 1 && hour == startHour && minute == startMinute)
+    {
+      return true;
+    }
+    break;
+
+  case 4:
+    if (thursday == 1 && hour == startHour && minute == startMinute)
+    {
+      return true;
+    }
+    break;
+
+  case 5:
+    if (friday == 1 && hour == startHour && minute == startMinute)
+    {
+      return true;
+    }
+    break;
+
+  case 6:
+    if (saturday == 1 && hour == startHour && minute == startMinute)
+    {
+      return true;
+    }
+    break;
+
+  case 7:
+    if (sunday == 1 && hour == startHour && minute == startMinute)
+    {
+      return true;
+    }
+    break;
+
+  default:
+    return false;
+    break;
+  }
+  return false;
+}
+
+bool stopCyclicIrrigation()
+{
+  // int second = Clock.getSecond();
+  int minute = Clock.getMinute();
+  int hour = Clock.getHour(h12, PM);
+  int day = Clock.getDoW();
+
+  int monday = EEPROM.read(CYCLIC_MONDAY_EEPROM);
+  int tuesdey = EEPROM.read(CYCLIC_TUESDEY_EEPROM);
+  int wednesday = EEPROM.read(CYCLIC_WEDNESDAY_EEPROM);
+  int thursday = EEPROM.read(CYCLIC_THURSDAY_EEPROM);
+  int friday = EEPROM.read(CYCLIC_FRIDAY_EEPROM);
+  int saturday = EEPROM.read(CYCLIC_SATURDAY_EEPROM);
+  int sunday = EEPROM.read(CYCLIC_SUNDAY_EEPROM);
+
+  int stopHour = EEPROM.read(CYCLIC_STOP_HOUR_EEPROM);
+  int stopMinute = EEPROM.read(CYCLIC_STOP_MINUTE_EEPROM);
+
+  switch (day)
+  {
+  case 1:
+    if (monday == 1 && hour == stopHour && minute == stopMinute)
+    {
+      return true;
+    }
+    break;
+
+  case 2:
+    if (tuesdey == 1 && hour == stopHour && minute == stopMinute)
+    {
+      return true;
+    }
+    break;
+
+  case 3:
+    if (wednesday == 1 && hour == stopHour && minute == stopMinute)
+    {
+      return true;
+    }
+    break;
+
+  case 4:
+    if (thursday == 1 && hour == stopHour && minute == stopMinute)
+    {
+      return true;
+    }
+    break;
+
+  case 5:
+    if (friday == 1 && hour == stopHour && minute == stopMinute)
+    {
+      return true;
+    }
+    break;
+
+  case 6:
+    if (saturday == 1 && hour == stopHour && minute == stopMinute)
+    {
+      return true;
+    }
+    break;
+
+  case 7:
+    if (sunday == 1 && hour == stopHour && minute == stopMinute)
+    {
+      return true;
+    }
+    break;
+
+  default:
+    return false;
+    break;
+  }
+  return false;
+}
+
+int mode()
+{
   int irrigationMode = EEPROM.read(IRRIGATIOM_MODE_EEPROM);
 
   if (irrigationMode == 1)
   {
-    return true;
+    return 1;
   }
-  return false;
+  else if (irrigationMode == 2)
+  {
+    return 2;
+  }
+  else if (irrigationMode == 3) 
+  {
+    return 3;
+  }
+  return 1;
 }
 
 bool isFirstAlarm()
@@ -207,7 +381,7 @@ void setTime(int second, int minute, int hour, int dayOfWeek, int day, int month
 
 int *readDataFromBT(String dataFromPhone)
 {
-  static int dataArray[7];
+  static int dataArray[14];
 
   char data[dataFromPhone.length()];
   for (size_t i = 0; i < sizeof(data); i++)
@@ -272,8 +446,8 @@ void loop()
       int *timeFromBT;
       timeFromBT = readDataFromBT(dataFromPhone);
 
-      int timeData[7];
-      for (int i = 1; i < 8; i++)
+      int timeData[14];
+      for (int i = 1; i < 15; i++)
       {
         timeData[i] = *(timeFromBT + i);
       }
@@ -289,37 +463,26 @@ void loop()
       EEPROM.write(ALARM_MONTH_EEPROM, timeData[6]);
       delay(3.3);
       EEPROM.write(ALARM_YEAR_EEPROM, timeData[7]);
-    }
-    else if (dataFromPhone[0] == 'A' && dataFromPhone[1] == 'T' && dataFromPhone[2] == 'F')
-    {
-      int *timeFromBT;
-      timeFromBT = readDataFromBT(dataFromPhone);
-
-      int timeData[7];
-      for (int i = 1; i < 8; i++)
-      {
-        timeData[i] = *(timeFromBT + i);
-      }
-
-      EEPROM.write(STOP_ALARM_SECOND_EEPROM, timeData[1]);
       delay(3.3);
-      EEPROM.write(STOP_ALARM_MINUTE_EEPROM, timeData[2]);
+      EEPROM.write(STOP_ALARM_SECOND_EEPROM, timeData[8]);
       delay(3.3);
-      EEPROM.write(STOP_ALARM_HOUR_EEPROM, timeData[3]);
+      EEPROM.write(STOP_ALARM_MINUTE_EEPROM, timeData[9]);
       delay(3.3);
-      EEPROM.write(STOP_ALARM_DAY_EEPROM, timeData[5]);
+      EEPROM.write(STOP_ALARM_HOUR_EEPROM, timeData[10]);
       delay(3.3);
-      EEPROM.write(STOP_ALARM_MONTH_EEPROM, timeData[6]);
+      EEPROM.write(STOP_ALARM_DAY_EEPROM, timeData[12]);
       delay(3.3);
-      EEPROM.write(STOP_ALARM_YEAR_EEPROM, timeData[7]);
+      EEPROM.write(STOP_ALARM_MONTH_EEPROM, timeData[13]);
+      delay(3.3);
+      EEPROM.write(STOP_ALARM_YEAR_EEPROM, timeData[14]);
     }
     else if (dataFromPhone[0] == 'S' && dataFromPhone[1] == 'E' && dataFromPhone[2] == 'T')
     {
       int *settingsFromBT;
       settingsFromBT = readDataFromBT(dataFromPhone);
 
-      int timeData[7];
-      for (int i = 1; i < 8; i++)
+      int timeData[3];
+      for (int i = 1; i < 4; i++)
       {
         timeData[i] = *(settingsFromBT + i);
       }
@@ -327,11 +490,39 @@ void loop()
       EEPROM.write(SENSORS_AMOUNT_EEPROM, timeData[1]);
       delay(3.3);
       EEPROM.write(IRRIGATIOM_MODE_EEPROM, timeData[2]);
+    }
+    else if (dataFromPhone[0] == 'S' && dataFromPhone[1] == 'C' && dataFromPhone[2] == 'I')
+    {
+      int *timeFromBT;
+      timeFromBT = readDataFromBT(dataFromPhone);
 
-      Serial.print(" AM: ");
-      Serial.print(EEPROM.read(SENSORS_AMOUNT_EEPROM));
-      Serial.print(" MOD: ");
-      Serial.print(EEPROM.read(IRRIGATIOM_MODE_EEPROM));
+      int timeData[14];
+      for (int i = 1; i < 12; i++)
+      {
+        timeData[i] = *(timeFromBT + i);
+      }
+
+      EEPROM.write(CYCLIC_MONDAY_EEPROM, timeData[1]);
+      delay(3.3);
+      EEPROM.write(CYCLIC_TUESDEY_EEPROM, timeData[2]);
+      delay(3.3);
+      EEPROM.write(CYCLIC_WEDNESDAY_EEPROM, timeData[3]);
+      delay(3.3);
+      EEPROM.write(CYCLIC_THURSDAY_EEPROM, timeData[4]);
+      delay(3.3);
+      EEPROM.write(CYCLIC_FRIDAY_EEPROM, timeData[5]);
+      delay(3.3);
+      EEPROM.write(CYCLIC_SATURDAY_EEPROM, timeData[6]);
+      delay(3.3);
+      EEPROM.write(CYCLIC_SUNDAY_EEPROM, timeData[7]);
+      delay(3.3);
+      EEPROM.write(CYCLIC_START_HOUR_EEPROM, timeData[8]);
+      delay(3.3);
+      EEPROM.write(CYCLIC_START_MINUTE_EEPROM, timeData[9]);
+      delay(3.3);
+      EEPROM.write(CYCLIC_STOP_HOUR_EEPROM, timeData[10]);
+      delay(3.3);
+      EEPROM.write(CYCLIC_STOP_MINUTE_EEPROM, timeData[11]);
     }
     else if (dataFromPhone[0] == 'p')
     {
@@ -352,20 +543,30 @@ void loop()
     hc06.write(Serial.read());
   }
 
-  if (isFirstAlarm() && isAutomode())
+  if (isFirstAlarm() && mode() == 2)
   {
     // TO DO: irrigate()
     digitalWrite(LED, HIGH);
   }
-  if (isStopFirstAlarm() && isAutomode())
+  if (isStopFirstAlarm() && mode() == 2)
   {
     // TO DO: stopIrrigate()
     digitalWrite(LED, LOW);
   }
-  if (!isAutomode())
+
+  if (startCyclicIrrigation() && mode() == 3)
   {
-    // TO DO: stopIrrigate()
-    digitalWrite(LED, LOW);
+    digitalWrite(LED, HIGH);
   }
   
+  if(stopCyclicIrrigation() && mode() == 3) {
+    digitalWrite(LED, LOW);
+  }
+
+
+  // if (!mode())
+  // {
+  //   // TO DO: stopIrrigate()
+  //   digitalWrite(LED, LOW);
+  // }
 }
