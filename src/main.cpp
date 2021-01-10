@@ -3,7 +3,7 @@
 #include <DS3231.h>
 #include <Wire.h>
 #include <string.h>
-#include <EEPROM.h> // ???
+#include <EEPROM.h>
 
 // Time variables
 DS3231 Clock;
@@ -16,7 +16,7 @@ bool ADy, A12h, Apm;
 byte ADay, AHour, AMinute, ASecond, ABits;
 byte year, month, date, DoW, hour, minute, second;
 
-// CONSTANTS
+// ####### GENERAL CONSTANTS #######
 #define LED 10
 #define firstAnalogPin 54
 
@@ -428,7 +428,7 @@ void startIrrigation()
   digitalWrite(LED, HIGH);
 }
 
-void stopIrrigation() 
+void stopIrrigation()
 {
   digitalWrite(LED, LOW);
 }
@@ -575,6 +575,160 @@ void loop()
       {
         digitalWrite(LED, HIGH);
       }
+    }
+    else if (dataFromPhone[0] == 'G' && dataFromPhone[1] == 'E' && dataFromPhone[2] == 'T')
+    {
+      int mode = EEPROM.read(MANUAL_IRRIGATION_EEPROM);
+
+      int minuteStartPlanned = EEPROM.read(ALARM_MINUTE_EEPROM);
+      int hourStartPlanned = EEPROM.read(ALARM_HOUR_EEPROM);
+      int dayStartPlanned = EEPROM.read(ALARM_DAY_EEPROM);
+      int monthStartPlanned = EEPROM.read(ALARM_MONTH_EEPROM);
+      int yearStartPlanned = EEPROM.read(ALARM_YEAR_EEPROM);
+
+      int minuteStopPlanned = EEPROM.read(STOP_ALARM_MINUTE_EEPROM);
+      int hourStopPlanned = EEPROM.read(STOP_ALARM_HOUR_EEPROM);
+      int dayStopPlanned = EEPROM.read(STOP_ALARM_DAY_EEPROM);
+      int monthStopPlanned = EEPROM.read(STOP_ALARM_MONTH_EEPROM);
+      int yearStopPlanned = EEPROM.read(STOP_ALARM_YEAR_EEPROM);
+
+      int monday = EEPROM.read(CYCLIC_MONDAY_EEPROM);
+      int tuesdey = EEPROM.read(CYCLIC_TUESDEY_EEPROM);
+      int wednesday = EEPROM.read(CYCLIC_WEDNESDAY_EEPROM);
+      int thursday = EEPROM.read(CYCLIC_THURSDAY_EEPROM);
+      int friday = EEPROM.read(CYCLIC_FRIDAY_EEPROM);
+      int saturday = EEPROM.read(CYCLIC_SATURDAY_EEPROM);
+      int sunday = EEPROM.read(CYCLIC_SUNDAY_EEPROM);
+
+      int hourStartCyclic = EEPROM.read(CYCLIC_START_HOUR_EEPROM);
+      int minuteStartCyclic = EEPROM.read(CYCLIC_START_MINUTE_EEPROM);
+
+      int hourStopCyclic = EEPROM.read(CYCLIC_STOP_HOUR_EEPROM);
+      int minuteStopCyclic = EEPROM.read(CYCLIC_STOP_MINUTE_EEPROM);
+
+      hc06.print("S");
+      hc06.print(mode);
+
+      delay(100);
+
+      hc06.print("I");
+      if (dayStartPlanned < 10)
+      {
+        hc06.print("0");
+      }
+      hc06.print(dayStartPlanned);
+      hc06.print(".");
+      if (monthStartPlanned < 10)
+      {
+        hc06.print("0");
+      }
+      hc06.print(monthStartPlanned);
+      hc06.print(".");
+      hc06.print("20");
+      hc06.print(yearStartPlanned);
+      hc06.print(" o ");
+      if (hourStartPlanned < 10)
+      {
+        hc06.print("0");
+      }
+      hc06.print(hourStartPlanned);
+      hc06.print(":");
+      if (minuteStartPlanned < 10)
+      {
+        hc06.print("0");
+      }
+      hc06.print(minuteStartPlanned);
+
+      delay(100);
+
+      hc06.print("J");
+      if (dayStopPlanned < 10)
+      {
+        hc06.print("0");
+      }
+      hc06.print(dayStopPlanned);
+      hc06.print(".");
+      if (monthStopPlanned < 10)
+      {
+        hc06.print("0");
+      }
+      hc06.print(monthStopPlanned);
+      hc06.print(".");
+      hc06.print("20");
+      hc06.print(yearStopPlanned);
+      hc06.print(" o ");
+      if (hourStopPlanned < 10)
+      {
+        hc06.print("0");
+      }
+      hc06.print(hourStopPlanned);
+      hc06.print(":");
+      if (minuteStopPlanned < 10)
+      {
+        hc06.print("0");
+      }
+      hc06.print(minuteStopPlanned);
+
+      delay(100);
+
+      hc06.print("K");
+      if (monday == 1)
+      {
+        hc06.print("Pn. ");
+      }
+      if (tuesdey == 1)
+      {
+        hc06.print("Wt. ");
+      }
+      if (wednesday == 1)
+      {
+        hc06.print("Śr. ");
+      }
+      if (thursday == 1)
+      {
+        hc06.print("Cz. ");
+      }
+      if (friday == 1)
+      {
+        hc06.print("Pt. ");
+      }
+      if (saturday == 1)
+      {
+        hc06.print("Sb. ");
+      }
+      if (sunday == 1)
+      {
+        hc06.print("Nd. ");
+      }
+
+      hc06.print("\n");
+      hc06.print("od ");
+
+      if (hourStartCyclic < 10)
+      {
+        hc06.print("0");
+      }
+      hc06.print(hourStartCyclic);
+      hc06.print(":");
+      if (minuteStartCyclic < 10)
+      {
+        hc06.print("0");
+      }
+      hc06.print(minuteStartCyclic);
+
+      hc06.print(" do ");
+
+      if (hourStopCyclic < 10)
+      {
+        hc06.print("0");
+      }
+      hc06.print(hourStopCyclic);
+      hc06.print(":");
+      if (minuteStopCyclic < 10)
+      {
+        hc06.print("0");
+      }
+      hc06.print(minuteStopCyclic);
     }
   }
 
