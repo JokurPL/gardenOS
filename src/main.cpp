@@ -13,9 +13,6 @@ bool h12;
 bool PM;
 bool ADy, A12h, Apm;
 
-byte ADay, AHour, AMinute, ASecond, ABits;
-byte year, month, date, DoW, hour, minute, second;
-
 // ####### GENERAL CONSTANTS #######
 #define LED 10
 #define firstAnalogPin 54
@@ -40,28 +37,26 @@ byte year, month, date, DoW, hour, minute, second;
 
 #define SENSORS_AMOUNT_EEPROM 12
 #define IRRIGATIOM_MODE_EEPROM 13
+#define MIN_MOISTURE_EEPROM 14
 
 // ####### CYCLIC IRRIGATION CONSTANTS #######
-#define CYCLIC_MONDAY_EEPROM 14
-#define CYCLIC_TUESDEY_EEPROM 15
-#define CYCLIC_WEDNESDAY_EEPROM 16
-#define CYCLIC_THURSDAY_EEPROM 17
-#define CYCLIC_FRIDAY_EEPROM 18
-#define CYCLIC_SATURDAY_EEPROM 19
-#define CYCLIC_SUNDAY_EEPROM 20
-#define CYCLIC_START_HOUR_EEPROM 21
-#define CYCLIC_START_MINUTE_EEPROM 22
-#define CYCLIC_STOP_HOUR_EEPROM 23
-#define CYCLIC_STOP_MINUTE_EEPROM 24
+#define CYCLIC_MONDAY_EEPROM 15
+#define CYCLIC_TUESDEY_EEPROM 16
+#define CYCLIC_WEDNESDAY_EEPROM 17
+#define CYCLIC_THURSDAY_EEPROM 18
+#define CYCLIC_FRIDAY_EEPROM 19
+#define CYCLIC_SATURDAY_EEPROM 20
+#define CYCLIC_SUNDAY_EEPROM 21
+#define CYCLIC_START_HOUR_EEPROM 22
+#define CYCLIC_START_MINUTE_EEPROM 23
+#define CYCLIC_STOP_HOUR_EEPROM 24
+#define CYCLIC_STOP_MINUTE_EEPROM 25
 
 // ####### MANUAL IRRIGATION CONSTANTS #######
-#define MANUAL_IRRIGATION_EEPROM 25
+#define MANUAL_IRRIGATION_EEPROM 26
 
 int moistureSensorsAmonut = 0;
 float averageMoisture;
-
-char incomingValue;
-char outcomingValue;
 
 String dataFromPhone;
 
@@ -97,52 +92,55 @@ bool startCyclicIrrigation()
   int startHour = EEPROM.read(CYCLIC_START_HOUR_EEPROM);
   int startMinute = EEPROM.read(CYCLIC_START_MINUTE_EEPROM);
 
+  int stopHour = EEPROM.read(CYCLIC_STOP_HOUR_EEPROM);
+  int stopMinute = EEPROM.read(CYCLIC_STOP_MINUTE_EEPROM);
+
   switch (day)
   {
   case 1:
-    if (monday == 1 && hour == startHour && minute == startMinute)
+    if (monday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour && minute < stopMinute)
     {
       return true;
     }
     break;
 
   case 2:
-    if (tuesdey == 1 && hour == startHour && minute == startMinute)
+    if (tuesdey == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour && minute < stopMinute)
     {
       return true;
     }
     break;
 
   case 3:
-    if (wednesday == 1 && hour == startHour && minute == startMinute)
+    if (wednesday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour && minute < stopMinute)
     {
       return true;
     }
     break;
 
   case 4:
-    if (thursday == 1 && hour == startHour && minute == startMinute)
+    if (thursday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour && minute < stopMinute)
     {
       return true;
     }
     break;
 
   case 5:
-    if (friday == 1 && hour == startHour && minute == startMinute)
+    if (friday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour && minute < stopMinute)
     {
       return true;
     }
     break;
 
   case 6:
-    if (saturday == 1 && hour == startHour && minute == startMinute)
+    if (saturday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour && minute < stopMinute)
     {
       return true;
     }
     break;
 
   case 7:
-    if (sunday == 1 && hour == startHour && minute == startMinute)
+    if (sunday == 1 && hour == startHour && minute == startMinute && hour <= stopHour && minute < stopMinute)
     {
       return true;
     }
@@ -257,7 +255,7 @@ int mode()
 
 bool isFirstAlarm()
 {
-  int secondEEPROM, minuteEEPROM, hourEEPROM, dayEEPROM, monthEEPROM, yearEEPROM, second, minute, hour, day, month, year;
+  int secondEEPROM, minuteEEPROM, hourEEPROM, dayEEPROM, monthEEPROM, yearEEPROM, second, minute, hour, day, month, year, stopMinuteEEPROM, stopHourEEPROM;
 
   second = Clock.getSecond();
   minute = Clock.getMinute();
@@ -273,9 +271,12 @@ bool isFirstAlarm()
   monthEEPROM = EEPROM.read(ALARM_MONTH_EEPROM);
   yearEEPROM = EEPROM.read(ALARM_YEAR_EEPROM);
 
+  stopMinuteEEPROM = EEPROM.read(STOP_ALARM_MINUTE_EEPROM);
+  stopHourEEPROM = EEPROM.read(STOP_ALARM_HOUR_EEPROM);
+
   //second == secondEEPROM &&
 
-  if (minute == minuteEEPROM && hour == hourEEPROM && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM)
+  if (minute >= minuteEEPROM && hour >= hourEEPROM && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM && hour <= stopHourEEPROM && minute < stopMinuteEEPROM)
   {
     return true;
   }
@@ -423,6 +424,168 @@ int *readDataFromBT(String dataFromPhone)
   return dataArray;
 }
 
+void sendInformation()
+{
+  int mode = EEPROM.read(MANUAL_IRRIGATION_EEPROM);
+
+  int minuteStartPlanned = EEPROM.read(ALARM_MINUTE_EEPROM);
+  int hourStartPlanned = EEPROM.read(ALARM_HOUR_EEPROM);
+  int dayStartPlanned = EEPROM.read(ALARM_DAY_EEPROM);
+  int monthStartPlanned = EEPROM.read(ALARM_MONTH_EEPROM);
+  int yearStartPlanned = EEPROM.read(ALARM_YEAR_EEPROM);
+
+  int minuteStopPlanned = EEPROM.read(STOP_ALARM_MINUTE_EEPROM);
+  int hourStopPlanned = EEPROM.read(STOP_ALARM_HOUR_EEPROM);
+  int dayStopPlanned = EEPROM.read(STOP_ALARM_DAY_EEPROM);
+  int monthStopPlanned = EEPROM.read(STOP_ALARM_MONTH_EEPROM);
+  int yearStopPlanned = EEPROM.read(STOP_ALARM_YEAR_EEPROM);
+
+  int monday = EEPROM.read(CYCLIC_MONDAY_EEPROM);
+  int tuesdey = EEPROM.read(CYCLIC_TUESDEY_EEPROM);
+  int wednesday = EEPROM.read(CYCLIC_WEDNESDAY_EEPROM);
+  int thursday = EEPROM.read(CYCLIC_THURSDAY_EEPROM);
+  int friday = EEPROM.read(CYCLIC_FRIDAY_EEPROM);
+  int saturday = EEPROM.read(CYCLIC_SATURDAY_EEPROM);
+  int sunday = EEPROM.read(CYCLIC_SUNDAY_EEPROM);
+
+  int hourStartCyclic = EEPROM.read(CYCLIC_START_HOUR_EEPROM);
+  int minuteStartCyclic = EEPROM.read(CYCLIC_START_MINUTE_EEPROM);
+
+  int hourStopCyclic = EEPROM.read(CYCLIC_STOP_HOUR_EEPROM);
+  int minuteStopCyclic = EEPROM.read(CYCLIC_STOP_MINUTE_EEPROM);
+
+  hc06.print("S");
+  hc06.print(mode);
+
+  delay(100);
+
+  hc06.print("I");
+  if (dayStartPlanned < 10)
+  {
+    hc06.print("0");
+  }
+  hc06.print(dayStartPlanned);
+  hc06.print(".");
+  if (monthStartPlanned < 10)
+  {
+    hc06.print("0");
+  }
+  hc06.print(monthStartPlanned);
+  hc06.print(".");
+  hc06.print("20");
+  hc06.print(yearStartPlanned);
+  hc06.print(" o ");
+  if (hourStartPlanned < 10)
+  {
+    hc06.print("0");
+  }
+  hc06.print(hourStartPlanned);
+  hc06.print(":");
+  if (minuteStartPlanned < 10)
+  {
+    hc06.print("0");
+  }
+  hc06.print(minuteStartPlanned);
+
+  delay(100);
+
+  hc06.print("J");
+  if (dayStopPlanned < 10)
+  {
+    hc06.print("0");
+  }
+  hc06.print(dayStopPlanned);
+  hc06.print(".");
+  if (monthStopPlanned < 10)
+  {
+    hc06.print("0");
+  }
+  hc06.print(monthStopPlanned);
+  hc06.print(".");
+  hc06.print("20");
+  hc06.print(yearStopPlanned);
+  hc06.print(" o ");
+  if (hourStopPlanned < 10)
+  {
+    hc06.print("0");
+  }
+  hc06.print(hourStopPlanned);
+  hc06.print(":");
+  if (minuteStopPlanned < 10)
+  {
+    hc06.print("0");
+  }
+  hc06.print(minuteStopPlanned);
+
+  delay(100);
+
+  hc06.print("K");
+  if (monday == 1)
+  {
+    hc06.print("Pn. ");
+  }
+  if (tuesdey == 1)
+  {
+    hc06.print("Wt. ");
+  }
+  if (wednesday == 1)
+  {
+    hc06.print("Śr. ");
+  }
+  if (thursday == 1)
+  {
+    hc06.print("Cz. ");
+  }
+  if (friday == 1)
+  {
+    hc06.print("Pt. ");
+  }
+  if (saturday == 1)
+  {
+    hc06.print("Sb. ");
+  }
+  if (sunday == 1)
+  {
+    hc06.print("Nd. ");
+  }
+
+  hc06.print("\n");
+  hc06.print("od ");
+
+  if (hourStartCyclic < 10)
+  {
+    hc06.print("0");
+  }
+  hc06.print(hourStartCyclic);
+  hc06.print(":");
+  if (minuteStartCyclic < 10)
+  {
+    hc06.print("0");
+  }
+  hc06.print(minuteStartCyclic);
+
+  hc06.print(" do ");
+
+  if (hourStopCyclic < 10)
+  {
+    hc06.print("0");
+  }
+  hc06.print(hourStopCyclic);
+  hc06.print(":");
+  if (minuteStopCyclic < 10)
+  {
+    hc06.print("0");
+  }
+  hc06.print(minuteStopCyclic);
+}
+
+int minMoisture()
+{
+  int moisture = EEPROM.read(MIN_MOISTURE_EEPROM);
+
+  return moisture;
+}
+
 void startIrrigation()
 {
   digitalWrite(LED, HIGH);
@@ -435,6 +598,8 @@ void stopIrrigation()
 
 void setup()
 {
+  stopIrrigation();
+
   Wire.begin();
   Serial.begin(9600);
   hc06.begin(9600);
@@ -448,8 +613,6 @@ void loop()
 
   if (hc06.available() > 0)
   {
-    // incomingValue = hc06.read();
-    // Serial.write(incomingValue);
     dataFromPhone = hc06.readString();
     Serial.print(dataFromPhone);
     if (dataFromPhone[0] == 'R' && dataFromPhone[1] == 'T' && dataFromPhone[2] == 'C')
@@ -506,18 +669,28 @@ void loop()
     }
     else if (dataFromPhone[0] == 'S' && dataFromPhone[1] == 'E' && dataFromPhone[2] == 'T')
     {
+      stopIrrigation();
+
+
       int *settingsFromBT;
       settingsFromBT = readDataFromBT(dataFromPhone);
 
-      int timeData[3];
-      for (int i = 1; i < 4; i++)
+      int timeData[4];
+      for (int i = 1; i < 5; i++)
       {
         timeData[i] = *(settingsFromBT + i);
+      }
+
+      if (timeData[3] < 0 || timeData[3] > 100)
+      {
+        timeData[3] = 0;
       }
 
       EEPROM.write(SENSORS_AMOUNT_EEPROM, timeData[1]);
       delay(3.3);
       EEPROM.write(IRRIGATIOM_MODE_EEPROM, timeData[2]);
+      delay(3.3);
+      EEPROM.write(MIN_MOISTURE_EEPROM, timeData[3]);
     }
     else if (dataFromPhone[0] == 'S' && dataFromPhone[1] == 'C' && dataFromPhone[2] == 'I')
     {
@@ -554,6 +727,7 @@ void loop()
     }
     else if (dataFromPhone[0] == 'M' && dataFromPhone[1] == 'A' && dataFromPhone[2] == 'N')
     {
+
       int *dataFromBT;
       dataFromBT = readDataFromBT(dataFromPhone);
 
@@ -564,6 +738,10 @@ void loop()
       }
 
       EEPROM.write(MANUAL_IRRIGATION_EEPROM, data[1]);
+    }
+    else if (dataFromPhone[0] == 'G' && dataFromPhone[1] == 'E' && dataFromPhone[2] == 'T')
+    {
+      sendInformation();
     }
     else if (dataFromPhone[0] == 'p')
     {
@@ -576,166 +754,21 @@ void loop()
         digitalWrite(LED, HIGH);
       }
     }
-    else if (dataFromPhone[0] == 'G' && dataFromPhone[1] == 'E' && dataFromPhone[2] == 'T')
-    {
-      int mode = EEPROM.read(MANUAL_IRRIGATION_EEPROM);
-
-      int minuteStartPlanned = EEPROM.read(ALARM_MINUTE_EEPROM);
-      int hourStartPlanned = EEPROM.read(ALARM_HOUR_EEPROM);
-      int dayStartPlanned = EEPROM.read(ALARM_DAY_EEPROM);
-      int monthStartPlanned = EEPROM.read(ALARM_MONTH_EEPROM);
-      int yearStartPlanned = EEPROM.read(ALARM_YEAR_EEPROM);
-
-      int minuteStopPlanned = EEPROM.read(STOP_ALARM_MINUTE_EEPROM);
-      int hourStopPlanned = EEPROM.read(STOP_ALARM_HOUR_EEPROM);
-      int dayStopPlanned = EEPROM.read(STOP_ALARM_DAY_EEPROM);
-      int monthStopPlanned = EEPROM.read(STOP_ALARM_MONTH_EEPROM);
-      int yearStopPlanned = EEPROM.read(STOP_ALARM_YEAR_EEPROM);
-
-      int monday = EEPROM.read(CYCLIC_MONDAY_EEPROM);
-      int tuesdey = EEPROM.read(CYCLIC_TUESDEY_EEPROM);
-      int wednesday = EEPROM.read(CYCLIC_WEDNESDAY_EEPROM);
-      int thursday = EEPROM.read(CYCLIC_THURSDAY_EEPROM);
-      int friday = EEPROM.read(CYCLIC_FRIDAY_EEPROM);
-      int saturday = EEPROM.read(CYCLIC_SATURDAY_EEPROM);
-      int sunday = EEPROM.read(CYCLIC_SUNDAY_EEPROM);
-
-      int hourStartCyclic = EEPROM.read(CYCLIC_START_HOUR_EEPROM);
-      int minuteStartCyclic = EEPROM.read(CYCLIC_START_MINUTE_EEPROM);
-
-      int hourStopCyclic = EEPROM.read(CYCLIC_STOP_HOUR_EEPROM);
-      int minuteStopCyclic = EEPROM.read(CYCLIC_STOP_MINUTE_EEPROM);
-
-      hc06.print("S");
-      hc06.print(mode);
-
-      delay(100);
-
-      hc06.print("I");
-      if (dayStartPlanned < 10)
-      {
-        hc06.print("0");
-      }
-      hc06.print(dayStartPlanned);
-      hc06.print(".");
-      if (monthStartPlanned < 10)
-      {
-        hc06.print("0");
-      }
-      hc06.print(monthStartPlanned);
-      hc06.print(".");
-      hc06.print("20");
-      hc06.print(yearStartPlanned);
-      hc06.print(" o ");
-      if (hourStartPlanned < 10)
-      {
-        hc06.print("0");
-      }
-      hc06.print(hourStartPlanned);
-      hc06.print(":");
-      if (minuteStartPlanned < 10)
-      {
-        hc06.print("0");
-      }
-      hc06.print(minuteStartPlanned);
-
-      delay(100);
-
-      hc06.print("J");
-      if (dayStopPlanned < 10)
-      {
-        hc06.print("0");
-      }
-      hc06.print(dayStopPlanned);
-      hc06.print(".");
-      if (monthStopPlanned < 10)
-      {
-        hc06.print("0");
-      }
-      hc06.print(monthStopPlanned);
-      hc06.print(".");
-      hc06.print("20");
-      hc06.print(yearStopPlanned);
-      hc06.print(" o ");
-      if (hourStopPlanned < 10)
-      {
-        hc06.print("0");
-      }
-      hc06.print(hourStopPlanned);
-      hc06.print(":");
-      if (minuteStopPlanned < 10)
-      {
-        hc06.print("0");
-      }
-      hc06.print(minuteStopPlanned);
-
-      delay(100);
-
-      hc06.print("K");
-      if (monday == 1)
-      {
-        hc06.print("Pn. ");
-      }
-      if (tuesdey == 1)
-      {
-        hc06.print("Wt. ");
-      }
-      if (wednesday == 1)
-      {
-        hc06.print("Śr. ");
-      }
-      if (thursday == 1)
-      {
-        hc06.print("Cz. ");
-      }
-      if (friday == 1)
-      {
-        hc06.print("Pt. ");
-      }
-      if (saturday == 1)
-      {
-        hc06.print("Sb. ");
-      }
-      if (sunday == 1)
-      {
-        hc06.print("Nd. ");
-      }
-
-      hc06.print("\n");
-      hc06.print("od ");
-
-      if (hourStartCyclic < 10)
-      {
-        hc06.print("0");
-      }
-      hc06.print(hourStartCyclic);
-      hc06.print(":");
-      if (minuteStartCyclic < 10)
-      {
-        hc06.print("0");
-      }
-      hc06.print(minuteStartCyclic);
-
-      hc06.print(" do ");
-
-      if (hourStopCyclic < 10)
-      {
-        hc06.print("0");
-      }
-      hc06.print(hourStopCyclic);
-      hc06.print(":");
-      if (minuteStopCyclic < 10)
-      {
-        hc06.print("0");
-      }
-      hc06.print(minuteStopCyclic);
-    }
   }
 
   //Write from Serial Monitor to HC06
   if (Serial.available() > 0)
   {
     hc06.write(Serial.read());
+  }
+
+  if (toAverage(moistureSensorsAmonut) < minMoisture() && mode() == 1)
+  {
+    startIrrigation();
+  }
+  if (toAverage(moistureSensorsAmonut) >= minMoisture() && mode() == 1)
+  {
+    stopIrrigation();
   }
 
   if (isFirstAlarm() && mode() == 2)
