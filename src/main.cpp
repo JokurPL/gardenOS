@@ -13,8 +13,11 @@ bool h12;
 bool PM;
 bool ADy, A12h, Apm;
 
+int relayState = 0;
+int lastRelayState = 0;
+
 // ####### GENERAL CONSTANTS #######
-#define LED 10
+#define RELAY 10
 #define firstAnalogPin 54
 
 // ####### ALARM(PLANNED IRRIGATION) CONSTANTS #######
@@ -63,6 +66,7 @@ String dataFromPhone;
 SoftwareSerial hc06(2, 3); // 2 - Rx, 3 - Tx | Arduino Rx -> HC Tx # Arduino Tx -> HC Rx by divider
 
 // ################################ FUNCTIONS ################################
+
 bool isManualIrrigation()
 {
   int mode = EEPROM.read(MANUAL_IRRIGATION_EEPROM);
@@ -424,6 +428,12 @@ int *readDataFromBT(String dataFromPhone)
   return dataArray;
 }
 
+void sendRelayInfo(int state)
+{
+  hc06.print("R");
+  hc06.print(state);
+}
+
 void sendInformation()
 {
   int mode = EEPROM.read(MANUAL_IRRIGATION_EEPROM);
@@ -577,6 +587,10 @@ void sendInformation()
     hc06.print("0");
   }
   hc06.print(minuteStopCyclic);
+  
+  delay(100);
+
+  sendRelayInfo(digitalRead(RELAY));
 }
 
 int minMoisture()
@@ -588,12 +602,12 @@ int minMoisture()
 
 void startIrrigation()
 {
-  digitalWrite(LED, HIGH);
+  digitalWrite(RELAY, HIGH);
 }
 
 void stopIrrigation()
 {
-  digitalWrite(LED, LOW);
+  digitalWrite(RELAY, LOW);
 }
 
 void setup()
@@ -605,11 +619,20 @@ void setup()
   hc06.begin(9600);
 
   initAnalogs(moistureSensorsAmonut);
-  pinMode(LED, OUTPUT); // simple LED
+  pinMode(RELAY, OUTPUT); // simple RELAY
 }
 
 void loop()
 {
+
+  relayState = digitalRead(RELAY);
+
+  if (relayState != lastRelayState)
+  {
+    sendRelayInfo(relayState);    
+    lastRelayState = relayState;
+  }
+  
 
   if (hc06.available() > 0)
   {
@@ -745,13 +768,13 @@ void loop()
     }
     else if (dataFromPhone[0] == 'p')
     {
-      if (digitalRead(LED) == HIGH)
+      if (digitalRead(RELAY) == HIGH)
       {
-        digitalWrite(LED, LOW);
+        digitalWrite(RELAY, LOW);
       }
       else
       {
-        digitalWrite(LED, HIGH);
+        digitalWrite(RELAY, HIGH);
       }
     }
   }
@@ -764,6 +787,7 @@ void loop()
 
   if (toAverage(moistureSensorsAmonut) < minMoisture() && mode() == 1)
   {
+    
     startIrrigation();
   }
   if (toAverage(moistureSensorsAmonut) >= minMoisture() && mode() == 1)
