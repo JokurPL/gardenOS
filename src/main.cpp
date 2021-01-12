@@ -4,9 +4,11 @@
 #include <Wire.h>
 #include <string.h>
 #include <EEPROM.h>
+#include <Timers.h>
 
 // Time variables
 DS3231 Clock;
+Timer sendMoistureTimer;
 
 bool Century = false;
 bool h12;
@@ -59,7 +61,9 @@ int lastRelayState = 0;
 #define MANUAL_IRRIGATION_EEPROM 26
 
 int moistureSensorsAmonut = 0;
+
 float averageMoisture;
+float lastAverageMoisture;
 
 String dataFromPhone;
 
@@ -428,6 +432,12 @@ int *readDataFromBT(String dataFromPhone)
   return dataArray;
 }
 
+void sendAverageInfo(float moisture)
+{
+  hc06.print("M");
+  hc06.print(moisture);
+}
+
 void sendRelayInfo(int state)
 {
   hc06.print("R");
@@ -587,10 +597,14 @@ void sendInformation()
     hc06.print("0");
   }
   hc06.print(minuteStopCyclic);
-  
+
   delay(100);
 
   sendRelayInfo(digitalRead(RELAY));
+
+  delay(100);
+
+  sendAverageInfo(averageMoisture);
 }
 
 int minMoisture()
@@ -612,6 +626,7 @@ void stopIrrigation()
 
 void setup()
 {
+  sendMoistureTimer.begin(100);
   stopIrrigation();
 
   Wire.begin();
@@ -626,13 +641,24 @@ void loop()
 {
 
   relayState = digitalRead(RELAY);
+  averageMoisture = toAverage(moistureSensorsAmonut);
 
   if (relayState != lastRelayState)
   {
-    sendRelayInfo(relayState);    
+    sendRelayInfo(relayState);
     lastRelayState = relayState;
   }
-  
+
+  if (averageMoisture != lastAverageMoisture)
+  {
+    if (sendMoistureTimer.available())
+    {
+      sendAverageInfo(averageMoisture);
+      lastAverageMoisture = averageMoisture;
+      sendMoistureTimer.begin(100);
+    }
+    
+  }
 
   if (hc06.available() > 0)
   {
@@ -693,7 +719,6 @@ void loop()
     else if (dataFromPhone[0] == 'S' && dataFromPhone[1] == 'E' && dataFromPhone[2] == 'T')
     {
       stopIrrigation();
-
 
       int *settingsFromBT;
       settingsFromBT = readDataFromBT(dataFromPhone);
@@ -787,7 +812,7 @@ void loop()
 
   if (toAverage(moistureSensorsAmonut) < minMoisture() && mode() == 1)
   {
-    
+
     startIrrigation();
   }
   if (toAverage(moistureSensorsAmonut) >= minMoisture() && mode() == 1)
