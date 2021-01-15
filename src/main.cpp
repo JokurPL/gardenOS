@@ -657,7 +657,6 @@ void loop()
       lastAverageMoisture = averageMoisture;
       sendMoistureTimer.begin(100);
     }
-    
   }
 
   if (hc06.available() > 0)
@@ -739,6 +738,9 @@ void loop()
       EEPROM.write(IRRIGATIOM_MODE_EEPROM, timeData[2]);
       delay(3.3);
       EEPROM.write(MIN_MOISTURE_EEPROM, timeData[3]);
+      // delay(3.3);
+
+      // moistureSensorsAmonut = EEPROM.read(SENSORS_AMOUNT_EEPROM);
     }
     else if (dataFromPhone[0] == 'S' && dataFromPhone[1] == 'C' && dataFromPhone[2] == 'I')
     {
@@ -812,39 +814,33 @@ void loop()
 
   if (toAverage(moistureSensorsAmonut) < minMoisture() && mode() == 1)
   {
-
     startIrrigation();
   }
-  if (toAverage(moistureSensorsAmonut) >= minMoisture() && mode() == 1)
+  else if (toAverage(moistureSensorsAmonut) >= minMoisture() && mode() == 1)
   {
     stopIrrigation();
   }
-
-  if (isFirstAlarm() && mode() == 2)
+  else if (isFirstAlarm() && mode() == 2)
   {
     startIrrigation();
   }
-  if (isStopFirstAlarm() && mode() == 2)
+  else if (isStopFirstAlarm() && mode() == 2)
   {
     stopIrrigation();
   }
-
-  if (startCyclicIrrigation() && mode() == 3)
+  else if (startCyclicIrrigation() && mode() == 3)
   {
     startIrrigation();
   }
-
-  if (stopCyclicIrrigation() && mode() == 3)
+  else if (stopCyclicIrrigation() && mode() == 3)
   {
     stopIrrigation();
   }
-
-  if (isManualIrrigation() && mode() == 4)
+  else if (isManualIrrigation() && mode() == 4)
   {
     startIrrigation();
   }
-
-  if (!isManualIrrigation() && mode() == 4)
+  else if (!isManualIrrigation() && mode() == 4)
   {
     stopIrrigation();
   }
