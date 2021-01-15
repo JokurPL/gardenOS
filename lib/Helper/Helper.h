@@ -7,11 +7,6 @@
 #include <SoftwareSerial.h>
 #include <string.h>
 
-bool Century = false;
-bool h12;
-bool PM;
-bool ADy, A12h, Apm;
-
 #define RELAY 10
 #define firstAnalogPin 54
 
@@ -56,27 +51,30 @@ bool ADy, A12h, Apm;
 class Helper
 {
 private:
-    /* data */
+    bool Century = false;
+    bool h12;
+    bool PM;
+    bool ADy, A12h, Apm;
 public:
-    bool isManualIrrigation(int address);
-    bool startCyclicIrrigation(DS3231 Clock, int mondayAddress, int tuesdeyAddress, int wednesdayAddress, int thursdayAddress, int fridayAddress, int saturdayAddress, int sundayAddress, int startHourAddress, int startMinuteAddress, int stopHourAddress, int stopMinuteAddress);
-    bool stopCyclicIrrigation(DS3231 Clock, int mondayAddress, int tuesdeyAddress, int wednesdayAddress, int thursdayAddress, int fridayAddress, int saturdayAddress, int sundayAddress, int stopHourAddress, int stopMinuteAddress);
-    bool isFirstAlarm(DS3231 Clock);
-    bool isStopFirstAlarm(DS3231 Clock);
+    bool isManualIrrigation();
+    bool startCyclicIrrigation(DS3231);
+    bool stopCyclicIrrigation(DS3231);
+    bool isFirstAlarm(DS3231);
+    bool isStopFirstAlarm(DS3231);
 
     int mode();
-    int *readDataFromBT(String dataFromPhone);
+    int *readDataFromBT(String);
     int minMoisture();
 
-    float toAverage(int moistureSensorsAmonut);
+    float toAverage(int);
 
-    void readTime(DS3231 Clock, SoftwareSerial hc06);
-    void initAnalogs(int moistureSensorsAmonut);
-    void setTime(DS3231 Clock, int second, int minute, int hour, int dayOfWeek, int day, int month, int year);
+    void readTime(DS3231, SoftwareSerial);
+    void initAnalogs(int);
+    void setTime(DS3231, int, int, int, int, int, int, int);
 
-    void sendAverageInfo(SoftwareSerial hc06, float moisture);
-    void sendRelayInfo(SoftwareSerial hc06, int state);
-    void sendInformation(DS3231 Clock, SoftwareSerial hc06, float averageMoisture);
+    void sendAverageInfo(SoftwareSerial, float);
+    void sendRelayInfo(SoftwareSerial, int);
+    void sendInformation(DS3231, SoftwareSerial, float);
 
     void startIrrigation();
     void stopIrrigation();

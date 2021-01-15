@@ -1,6 +1,6 @@
 #include "Helper.h"
 
-bool Helper::isManualIrrigation(int address)
+bool Helper::isManualIrrigation()
 {
     int mode = EEPROM.read(MANUAL_IRRIGATION_EEPROM);
 
@@ -11,7 +11,7 @@ bool Helper::isManualIrrigation(int address)
     return false;
 }
 
-bool Helper::startCyclicIrrigation(DS3231 Clock, int mondayAddress, int tuesdeyAddress, int wednesdayAddress, int thursdayAddress, int fridayAddress, int saturdayAddress, int sundayAddress, int startHourAddress, int startMinuteAddress, int stopHourAddress, int stopMinuteAddress)
+bool Helper::startCyclicIrrigation(DS3231 Clock)
 {
     // int second = Clock.getSecond();
     int minute = Clock.getMinute();
@@ -90,7 +90,7 @@ bool Helper::startCyclicIrrigation(DS3231 Clock, int mondayAddress, int tuesdeyA
     return false;
 }
 
-bool Helper::stopCyclicIrrigation(DS3231 Clock, int mondayAddress, int tuesdeyAddress, int wednesdayAddress, int thursdayAddress, int fridayAddress, int saturdayAddress, int sundayAddress, int stopHourAddress, int stopMinuteAddress)
+bool Helper::stopCyclicIrrigation(DS3231 Clock)
 {
     // int second = Clock.getSecond();
     int minute = Clock.getMinute();
