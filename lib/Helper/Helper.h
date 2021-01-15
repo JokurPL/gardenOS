@@ -57,24 +57,24 @@ private:
     bool ADy, A12h, Apm;
 public:
     bool isManualIrrigation();
-    bool startCyclicIrrigation(DS3231);
-    bool stopCyclicIrrigation(DS3231);
-    bool isFirstAlarm(DS3231);
-    bool isStopFirstAlarm(DS3231);
+    bool startCyclicIrrigation(DS3231 Clock);
+    bool stopCyclicIrrigation(DS3231 Clock);
+    bool isFirstAlarm(DS3231 Clock);
+    bool isStopFirstAlarm(DS3231 Clock);
 
     int mode();
-    int *readDataFromBT(String);
+    int *readDataFromBT(String dataFromPhone);
     int minMoisture();
 
-    float toAverage(int);
+    float toAverage(int moistureSensorsAmonut);
 
-    void readTime(DS3231, SoftwareSerial);
-    void initAnalogs(int);
-    void setTime(DS3231, int, int, int, int, int, int, int);
+    void readTime(DS3231 Clock, SoftwareSerial);
+    void initAnalogs(int moistureSensorsAmonut);
+    void setTime(DS3231 Clock, int second, int minute, int hour, int dayOfWeek, int day, int month, int year);
 
-    void sendAverageInfo(SoftwareSerial, float);
-    void sendRelayInfo(SoftwareSerial, int);
-    void sendInformation(DS3231, SoftwareSerial, float);
+    void sendAverageInfo(SoftwareSerial hc06, float moisture);
+    void sendRelayInfo(SoftwareSerial hc06, int state);
+    void sendInformation(DS3231 Clock, SoftwareSerial hc06, float averageMoisture);
 
     void startIrrigation();
     void stopIrrigation();
