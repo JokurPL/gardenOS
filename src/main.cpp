@@ -7,58 +7,71 @@
 #include <Timers.h>
 #include <Helper.h>
 
-// Time variables
 DS3231 Clock;
 Timer sendMoistureTimer;
-Helper functions;
+Helper helper;
 
 int relayState = 0;
 int lastRelayState = 0;
 
-int moistureSensorsAmonut = 0;
-
 float averageMoisture;
 float lastAverageMoisture;
+
+int moistureSensorsAmonut = 0;
 
 String dataFromPhone;
 
 SoftwareSerial hc06(2, 3); // 2 - Rx, 3 - Tx | Arduino Rx -> HC Tx # Arduino Tx -> HC Rx by divider
 
+/* * * * * KEYPAD * * * * */
+#define KEY_1 4
+#define KEY_2 5
+#define KEY_3 6
+#define KEY_4 7
+
 void setup()
 {
   sendMoistureTimer.begin(100);
-  functions.stopIrrigation();
+  helper.stopIrrigation();
 
   Wire.begin();
   Serial.begin(9600);
   hc06.begin(9600);
 
-  functions.initAnalogs(moistureSensorsAmonut);
-  pinMode(RELAY, OUTPUT); // simple RELAY
+  /* * * * * KEYPAD INIT * * * * */
+  pinMode(KEY_1, INPUT_PULLUP);
+  pinMode(KEY_2, INPUT_PULLUP);
+  pinMode(KEY_3, INPUT_PULLUP);
+  pinMode(KEY_4, INPUT_PULLUP);
+
+  helper.initAnalogs(moistureSensorsAmonut); // EEPROM.read(SENSORS_AMOUNT_EEPROM)
+  pinMode(RELAY, OUTPUT);
 }
 
 void loop()
 {
-
   relayState = digitalRead(RELAY);
-  averageMoisture = functions.toAverage(moistureSensorsAmonut);
+  averageMoisture = helper.toAverage(moistureSensorsAmonut);
 
+  /* * * * * Update relay state on change * * * * */
   if (relayState != lastRelayState)
   {
-    functions.sendRelayInfo(hc06, relayState);
+    helper.sendRelayInfo(hc06, relayState);
     lastRelayState = relayState;
   }
 
+  /* * * * * Update average moisture value on change * * * * */
   if (averageMoisture != lastAverageMoisture)
   {
     if (sendMoistureTimer.available())
     {
-      functions.sendAverageInfo(hc06, averageMoisture);
+      helper.sendAverageInfo(hc06, averageMoisture);
       lastAverageMoisture = averageMoisture;
       sendMoistureTimer.begin(100);
     }
   }
 
+  /* * * * * Data from phone * * * * */
   if (hc06.available() > 0)
   {
     dataFromPhone = hc06.readString();
@@ -68,7 +81,7 @@ void loop()
       hc06.print(dataFromPhone);
 
       int *timeFromBT;
-      timeFromBT = functions.readDataFromBT(dataFromPhone);
+      timeFromBT = helper.readDataFromBT(dataFromPhone);
 
       int timeData[7];
 
@@ -77,13 +90,13 @@ void loop()
         timeData[i] = *(timeFromBT + i);
       }
 
-      functions.setTime(Clock, timeData[1], timeData[2], timeData[3], timeData[4], timeData[5], timeData[6], timeData[7]);
-      functions.readTime(Clock, hc06);
+      helper.setTime(Clock, timeData[1], timeData[2], timeData[3], timeData[4], timeData[5], timeData[6], timeData[7]);
+      helper.readTime(Clock, hc06);
     }
     else if (dataFromPhone[0] == 'A' && dataFromPhone[1] == 'T' && dataFromPhone[2] == 'S')
     {
       int *timeFromBT;
-      timeFromBT = functions.readDataFromBT(dataFromPhone);
+      timeFromBT = helper.readDataFromBT(dataFromPhone);
 
       int timeData[14];
       for (int i = 1; i < 15; i++)
@@ -117,10 +130,10 @@ void loop()
     }
     else if (dataFromPhone[0] == 'S' && dataFromPhone[1] == 'E' && dataFromPhone[2] == 'T')
     {
-      functions.stopIrrigation();
+      helper.stopIrrigation();
 
       int *settingsFromBT;
-      settingsFromBT = functions.readDataFromBT(dataFromPhone);
+      settingsFromBT = helper.readDataFromBT(dataFromPhone);
 
       int timeData[4];
       for (int i = 1; i < 5; i++)
@@ -145,7 +158,7 @@ void loop()
     else if (dataFromPhone[0] == 'S' && dataFromPhone[1] == 'C' && dataFromPhone[2] == 'I')
     {
       int *timeFromBT;
-      timeFromBT = functions.readDataFromBT(dataFromPhone);
+      timeFromBT = helper.readDataFromBT(dataFromPhone);
 
       int timeData[14];
       for (int i = 1; i < 12; i++)
@@ -179,7 +192,7 @@ void loop()
     {
 
       int *dataFromBT;
-      dataFromBT = functions.readDataFromBT(dataFromPhone);
+      dataFromBT = helper.readDataFromBT(dataFromPhone);
 
       int data[2];
       for (int i = 1; i < 3; i++)
@@ -191,7 +204,7 @@ void loop()
     }
     else if (dataFromPhone[0] == 'G' && dataFromPhone[1] == 'E' && dataFromPhone[2] == 'T')
     {
-      functions.sendInformation(Clock, hc06, averageMoisture);
+      helper.sendInformation(Clock, hc06, averageMoisture);
     }
     else if (dataFromPhone[0] == 'p')
     {
@@ -206,42 +219,43 @@ void loop()
     }
   }
 
-  //Write from Serial Monitor to HC06
+  /* * * * * Write from Serial Monitor to HC06 * * * * */
   if (Serial.available() > 0)
   {
     hc06.write(Serial.read());
   }
 
-  if (functions.toAverage(moistureSensorsAmonut) < functions.minMoisture() && functions.mode() == 1)
+  /* * * * * Executive section * * * * */
+  if (helper.toAverage(moistureSensorsAmonut) < helper.minMoisture() && helper.mode() == 1)
   {
-    functions.startIrrigation();
+    helper.startIrrigation();
   }
-  else if (functions.toAverage(moistureSensorsAmonut) >= functions.minMoisture() && functions.mode() == 1)
+  else if (helper.toAverage(moistureSensorsAmonut) >= helper.minMoisture() && helper.mode() == 1)
   {
-    functions.stopIrrigation();
+    helper.stopIrrigation();
   }
-  else if (functions.isFirstAlarm(Clock) && functions.mode() == 2)
+  else if (helper.isFirstAlarm(Clock) && helper.mode() == 2)
   {
-    functions.startIrrigation();
+    helper.startIrrigation();
   }
-  else if (functions.isStopFirstAlarm(Clock) && functions.mode() == 2)
+  else if (helper.isStopFirstAlarm(Clock) && helper.mode() == 2)
   {
-    functions.stopIrrigation();
+    helper.stopIrrigation();
   }
-  else if (functions.startCyclicIrrigation(Clock) && functions.mode() == 3)
+  else if (helper.startCyclicIrrigation(Clock) && helper.mode() == 3)
   {
-    functions.startIrrigation();
+    helper.startIrrigation();
   }
-  else if (functions.stopCyclicIrrigation(Clock) && functions.mode() == 3)
+  else if (helper.stopCyclicIrrigation(Clock) && helper.mode() == 3)
   {
-    functions.stopIrrigation();
+    helper.stopIrrigation();
   }
-  else if (functions.isManualIrrigation() && functions.mode() == 4)
+  else if (helper.isManualIrrigation() && helper.mode() == 4)
   {
-    functions.startIrrigation();
+    helper.startIrrigation();
   }
-  else if (!functions.isManualIrrigation() && functions.mode() == 4)
+  else if (!helper.isManualIrrigation() && helper.mode() == 4)
   {
-    functions.stopIrrigation();
+    helper.stopIrrigation();
   }
 }
