@@ -10,6 +10,9 @@
 #define RELAY 10
 #define firstAnalogPin 54
 
+#define MAX_MOISTURE_DEC 600
+#define MIN_MOISTURE_DEC 100
+
 // ####### ALARM(PLANNED IRRIGATION) CONSTANTS #######
 
 #define ALARM_SECOND_EEPROM 0

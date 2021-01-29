@@ -316,7 +316,7 @@ float Helper::toAverage(int moistureSensorsAmonut)
 
         for (int i = firstAnalogPin; i < endIteration; i++)
         {
-            sum += analogRead(uint8_t(i));
+            sum += map(analogRead(uint8_t(i)), MIN_MOISTURE_DEC, MAX_MOISTURE_DEC, 0, 100);
         }
 
         avg = sum / moistureSensorsAmonut;
