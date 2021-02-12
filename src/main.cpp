@@ -21,9 +21,9 @@ int moistureSensorsAmonut = 0;
 
 String dataFromPhone;
 
-SoftwareSerial hc06(2, 3); // 2 - Rx, 3 - Tx | Arduino Rx -> HC Tx # Arduino Tx -> HC Rx by divider
-
-/* * * * * KEYPAD * * * * */
+SoftwareSerial hc06(50, 51);  // 2 - Rx, 3 - Tx | Arduino Rx -> HC Tx # Arduino Tx -> HC Rx by divider
+                              // 22 - Rx(for MEGA), 23 - Tx(for MEGA)
+/* * * * * KEYPAD * * * * * */
 #define KEY_1 4
 #define KEY_2 5
 #define KEY_3 6

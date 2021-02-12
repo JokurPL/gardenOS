@@ -192,7 +192,7 @@ int Helper::mode()
 
 bool Helper::isFirstAlarm(DS3231 Clock)
 {
-    int secondEEPROM, minuteEEPROM, hourEEPROM, dayEEPROM, monthEEPROM, yearEEPROM, second, minute, hour, day, month, year, stopMinuteEEPROM, stopHourEEPROM;
+    int stopDayEEPROM, stopMonthEEPROM, stopYearEEPROM, secondEEPROM, minuteEEPROM, hourEEPROM, dayEEPROM, monthEEPROM, yearEEPROM, second, minute, hour, day, month, year, stopMinuteEEPROM, stopHourEEPROM;
 
     second = Clock.getSecond();
     minute = Clock.getMinute();
@@ -210,11 +210,37 @@ bool Helper::isFirstAlarm(DS3231 Clock)
 
     stopMinuteEEPROM = EEPROM.read(STOP_ALARM_MINUTE_EEPROM);
     stopHourEEPROM = EEPROM.read(STOP_ALARM_HOUR_EEPROM);
-
+    stopDayEEPROM = EEPROM.read(STOP_ALARM_DAY_EEPROM);
+    stopMonthEEPROM = EEPROM.read(STOP_ALARM_MONTH_EEPROM);
+    stopYearEEPROM = EEPROM.read(STOP_ALARM_YEAR_EEPROM);
     //second == secondEEPROM &&
 
-    if (minute >= minuteEEPROM && hour >= hourEEPROM && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM && hour <= stopHourEEPROM && minute < stopMinuteEEPROM)
+    if (hour >= hourEEPROM && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM && hour <= stopHourEEPROM) 
     {
+        if (minute == minuteEEPROM && hour == hourEEPROM)
+        {
+            return true;
+        }
+
+        if (hour == stopHourEEPROM && (minute == stopMinuteEEPROM || hour > stopHourEEPROM || minute > stopMinuteEEPROM)) 
+        {
+            return false;
+        }
+
+        return true;
+    }
+    else if (day >= dayEEPROM && month >= monthEEPROM && year >= yearEEPROM) 
+    {
+        if (hour == stopHourEEPROM && (minute == stopMinuteEEPROM || hour > stopHourEEPROM || minute > stopMinuteEEPROM) && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM) 
+        {
+            return false;
+        }
+        
+        if (day == stopDayEEPROM && month == stopMonthEEPROM && year == stopYearEEPROM) 
+        {
+            return false;
+        }
+        
         return true;
     }
     return false;
