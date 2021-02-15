@@ -71,7 +71,7 @@ public:
 
     float toAverage(int moistureSensorsAmonut);
 
-    void readTime(DS3231 Clock, SoftwareSerial);
+    void readTime(DS3231 Clock, SoftwareSerial hc06);
     void initAnalogs(int moistureSensorsAmonut);
     void setTime(DS3231 Clock, int second, int minute, int hour, int dayOfWeek, int day, int month, int year);
 

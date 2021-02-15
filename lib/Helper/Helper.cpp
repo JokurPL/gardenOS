@@ -35,50 +35,113 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
     switch (day)
     {
     case 1:
-        if (monday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour && minute < stopMinute)
+        if (monday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour)
         {
+            if (minute == stopMinute && hour == stopHour)
+            {
+                return true;
+            }
+
+            if (hour == stopHour && (minute == stopMinute || hour > stopHour || minute > stopMinute))
+            {
+                return false;
+            }
             return true;
         }
         break;
 
     case 2:
-        if (tuesdey == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour && minute < stopMinute)
+        if (tuesdey == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour)
         {
+            if (minute == stopMinute && hour == stopHour)
+            {
+                return true;
+            }
+
+            if (hour == stopHour && (minute == stopMinute || hour > stopHour || minute > stopMinute))
+            {
+                return false;
+            }
             return true;
         }
         break;
 
     case 3:
-        if (wednesday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour && minute < stopMinute)
+        if (wednesday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour)
         {
+            if (minute == stopMinute && hour == stopHour)
+            {
+                return true;
+            }
+
+            if (hour == stopHour && (minute == stopMinute || hour > stopHour || minute > stopMinute))
+            {
+                return false;
+            }
             return true;
         }
         break;
 
     case 4:
-        if (thursday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour && minute < stopMinute)
+        if (thursday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour)
         {
+            if (minute == stopMinute && hour == stopHour)
+            {
+                return true;
+            }
+
+            if (hour == stopHour && (minute == stopMinute || hour > stopHour || minute > stopMinute))
+            {
+                return false;
+            }
             return true;
         }
         break;
 
     case 5:
-        if (friday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour && minute < stopMinute)
+        if (friday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour)
         {
+            if (minute == stopMinute && hour == stopHour)
+            {
+                return true;
+            }
+
+            if (hour == stopHour && (minute == stopMinute || hour > stopHour || minute > stopMinute))
+            {
+                return false;
+            }
             return true;
         }
         break;
 
     case 6:
-        if (saturday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour && minute < stopMinute)
+        if (saturday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour)
         {
+            if (minute == stopMinute && hour == stopHour)
+            {
+                return true;
+            }
+
+            if (hour == stopHour && (minute == stopMinute || hour > stopHour || minute > stopMinute))
+            {
+                return false;
+            }
             return true;
         }
         break;
 
     case 7:
-        if (sunday == 1 && hour == startHour && minute == startMinute && hour <= stopHour && minute < stopMinute)
+        if (sunday == 1 && hour == startHour && minute == startMinute && hour <= stopHour)
         {
+            if (minute == stopMinute && hour == stopHour)
+            {
+                return true;
+            }
+
+            if (hour == stopHour && (minute == stopMinute || hour > stopHour || minute > stopMinute))
+            {
+                return false;
+            }
             return true;
         }
         break;
@@ -215,32 +278,32 @@ bool Helper::isFirstAlarm(DS3231 Clock)
     stopYearEEPROM = EEPROM.read(STOP_ALARM_YEAR_EEPROM);
     //second == secondEEPROM &&
 
-    if (hour >= hourEEPROM && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM && hour <= stopHourEEPROM) 
+    if (hour >= hourEEPROM && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM && hour <= stopHourEEPROM)
     {
         if (minute == minuteEEPROM && hour == hourEEPROM)
         {
             return true;
         }
 
-        if (hour == stopHourEEPROM && (minute == stopMinuteEEPROM || hour > stopHourEEPROM || minute > stopMinuteEEPROM)) 
+        if (hour == stopHourEEPROM && (minute == stopMinuteEEPROM || hour > stopHourEEPROM || minute > stopMinuteEEPROM))
         {
             return false;
         }
 
         return true;
     }
-    else if (day >= dayEEPROM && month >= monthEEPROM && year >= yearEEPROM) 
+    else if (day >= dayEEPROM && month >= monthEEPROM && year >= yearEEPROM)
     {
-        if (hour == stopHourEEPROM && (minute == stopMinuteEEPROM || hour > stopHourEEPROM || minute > stopMinuteEEPROM) && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM) 
+        if (hour == stopHourEEPROM && (minute == stopMinuteEEPROM || hour > stopHourEEPROM || minute > stopMinuteEEPROM) && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM)
         {
             return false;
         }
-        
-        if (day == stopDayEEPROM && month == stopMonthEEPROM && year == stopYearEEPROM) 
+
+        if (day == stopDayEEPROM && month == stopMonthEEPROM && year == stopYearEEPROM)
         {
             return false;
         }
-        
+
         return true;
     }
     return false;
