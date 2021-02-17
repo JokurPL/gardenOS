@@ -7,12 +7,12 @@
 #include <Timers.h>
 #include <Helper.h>
 #include <Adafruit_SSD1306.h>
-#include <Oled.h>
+// #include <Oled.h>
 
 DS3231 Clock;
 Timer sendMoistureTimer;
 Helper helper;
-Oled oledHelper;
+// Oled oledHelper;
 
 int relayState = 0;
 int lastRelayState = 0;
@@ -100,7 +100,7 @@ void displayMode()
   case 1:
     display.setTextSize(1.5);
     display.setTextColor(WHITE, BLACK);
-    display.setCursor(0, 24);
+    display.setCursor(0, 36);
     display.print("Tryb: automatyczne podlewanie");
     display.display();
     break;
@@ -108,7 +108,7 @@ void displayMode()
   case 2:
     display.setTextSize(1.5);
     display.setTextColor(WHITE, BLACK);
-    display.setCursor(0, 24);
+    display.setCursor(0, 36);
     display.print("Tryb: planowane podlewanie");
     display.display();
     break;
@@ -116,7 +116,7 @@ void displayMode()
   case 3:
     display.setTextSize(1.5);
     display.setTextColor(WHITE, BLACK);
-    display.setCursor(0, 24);
+    display.setCursor(0, 36);
     display.print("Tryb: cykliczne podlewanie");
     display.display();
     break;
@@ -124,7 +124,7 @@ void displayMode()
   case 4:
     display.setTextSize(1.5);
     display.setTextColor(WHITE, BLACK);
-    display.setCursor(0, 24);
+    display.setCursor(0, 36);
     display.print("Tryb: reczne podlewanie");
     display.display();
     break;
@@ -162,7 +162,7 @@ void setup()
   {
     display.setTextSize(1.5);
     display.setTextColor(WHITE, BLACK);
-    display.setCursor(0, 0);
+    display.setCursor(0, 12);
     display.println("Stan: podlewanie");
     display.display();
   }
@@ -170,7 +170,7 @@ void setup()
   {
     display.setTextSize(1.5);
     display.setTextColor(WHITE, BLACK);
-    display.setCursor(0, 0);
+    display.setCursor(0, 12);
     display.println("Stan: spoczynek");
     display.display();
   }
@@ -178,7 +178,7 @@ void setup()
   averageMoisture = helper.toAverage(moistureSensorsAmonut);
   display.setTextSize(1.5);
   display.setTextColor(WHITE, BLACK);
-  display.setCursor(0, 12);
+  display.setCursor(0, 24);
   display.print("Wilgotnosc: " + String(averageMoisture) + "%");
   display.display();
 }
@@ -200,7 +200,7 @@ void loop()
     {
       display.setTextSize(1.5);
       display.setTextColor(WHITE, BLACK);
-      display.setCursor(0, 0);
+      display.setCursor(0, 12);
       display.println("Stan: podlewanie");
       display.display();
       delay(100);
@@ -209,7 +209,7 @@ void loop()
     {
       display.setTextSize(1.5);
       display.setTextColor(WHITE, BLACK);
-      display.setCursor(0, 0);
+      display.setCursor(0, 12);
       display.println("Stan: spoczynek ");
       display.display();
       delay(100);
@@ -221,7 +221,7 @@ void loop()
   {
     display.setTextSize(1.5);
     display.setTextColor(WHITE, BLACK);
-    display.setCursor(0, 12);
+    display.setCursor(0, 24);
     display.println("Wilgotnosc: " + String(averageMoisture) + "%");
     display.display();
     if (sendMoistureTimer.available())

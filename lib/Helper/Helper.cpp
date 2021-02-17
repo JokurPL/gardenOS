@@ -37,7 +37,7 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
     case 1:
         if (monday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour)
         {
-            if (minute == stopMinute && hour == stopHour)
+            if (minute == startMinute && hour == startHour)
             {
                 return true;
             }
@@ -46,6 +46,12 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
             {
                 return false;
             }
+
+            if (hour > stopHour)
+            {
+                return false;
+            }
+
             return true;
         }
         break;
@@ -53,7 +59,7 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
     case 2:
         if (tuesdey == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour)
         {
-            if (minute == stopMinute && hour == stopHour)
+            if (minute == startMinute && hour == startHour)
             {
                 return true;
             }
@@ -62,6 +68,11 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
             {
                 return false;
             }
+            if (hour > stopHour)
+            {
+                return false;
+            }
+
             return true;
         }
         break;
@@ -69,7 +80,7 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
     case 3:
         if (wednesday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour)
         {
-            if (minute == stopMinute && hour == stopHour)
+            if (minute == startMinute && hour == startHour)
             {
                 return true;
             }
@@ -78,6 +89,11 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
             {
                 return false;
             }
+            if (hour > stopHour)
+            {
+                return false;
+            }
+
             return true;
         }
         break;
@@ -85,7 +101,7 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
     case 4:
         if (thursday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour)
         {
-            if (minute == stopMinute && hour == stopHour)
+            if (minute == startMinute && hour == startHour)
             {
                 return true;
             }
@@ -94,6 +110,11 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
             {
                 return false;
             }
+            if (hour > stopHour)
+            {
+                return false;
+            }
+
             return true;
         }
         break;
@@ -101,7 +122,7 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
     case 5:
         if (friday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour)
         {
-            if (minute == stopMinute && hour == stopHour)
+            if (minute == startMinute && hour == startHour)
             {
                 return true;
             }
@@ -110,6 +131,11 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
             {
                 return false;
             }
+            if (hour > stopHour)
+            {
+                return false;
+            }
+
             return true;
         }
         break;
@@ -117,7 +143,7 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
     case 6:
         if (saturday == 1 && hour >= startHour && minute >= startMinute && hour <= stopHour)
         {
-            if (minute == stopMinute && hour == stopHour)
+            if (minute == startMinute && hour == startHour)
             {
                 return true;
             }
@@ -126,6 +152,11 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
             {
                 return false;
             }
+            if (hour > stopHour)
+            {
+                return false;
+            }
+
             return true;
         }
         break;
@@ -133,7 +164,8 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
     case 7:
         if (sunday == 1 && hour == startHour && minute == startMinute && hour <= stopHour)
         {
-            if (minute == stopMinute && hour == stopHour)
+
+            if (minute == startMinute && hour == startHour)
             {
                 return true;
             }
@@ -142,6 +174,11 @@ bool Helper::startCyclicIrrigation(DS3231 Clock)
             {
                 return false;
             }
+            if (hour > stopHour)
+            {
+                return false;
+            }
+
             return true;
         }
         break;
@@ -280,12 +317,23 @@ bool Helper::isFirstAlarm(DS3231 Clock)
 
     if (hour >= hourEEPROM && day == dayEEPROM && month == monthEEPROM && year == yearEEPROM && hour <= stopHourEEPROM)
     {
+
+        if (hour == hourEEPROM && minute != minuteEEPROM)
+        {
+            return false;
+        }
+
         if (minute == minuteEEPROM && hour == hourEEPROM)
         {
             return true;
         }
 
-        if (hour == stopHourEEPROM && (minute == stopMinuteEEPROM || hour > stopHourEEPROM || minute > stopMinuteEEPROM))
+        if (hour == stopHourEEPROM && (minute == stopMinuteEEPROM || minute > stopMinuteEEPROM))
+        {
+            return false;
+        }
+
+        if (hour > stopHourEEPROM)
         {
             return false;
         }
